@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-Time Product Comparison</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        input[type="text"] { padding: 10px; width: 300px; }
+        input[type="submit"] { padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <h2>Real-Time Product Rating and Review Scraper</h2>
+    <form method="POST">
+        <input type="text" name="product" placeholder="Enter product name..." required>
+        <input type="submit" value="Search">
+    </form>
+
+    {% if results %}
+        <h3>Scraping Results:</h3>
+        <table>
+            <tr><th>Website</th><th>Rating</th><th>Latest Review</th></tr>
+            {% for site, rating, review in results %}
+            <tr>
+                <td>{{ site }}</td>
+                <td>{{ rating }}</td>
+                <td>{{ review }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+</body>
+</html>
