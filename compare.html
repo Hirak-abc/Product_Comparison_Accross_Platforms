@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Result - {{ product_name }}</title>
+    <style>
+        :root {
+            --primary: #2c6ed5;
+            --primary-light: #4b83e2;
+            --primary-dark: #1b5bbe;
+            --secondary: #f0f2f5;
+            --text-dark: #333;
+            --text-light: #6c757d;
+            --white: #fff;
+            --border: #ddd;
+            --success: #28a745;
+            --amazon: #ff9900;
+            --flipkart: #2874f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+        
+        .product-name {
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: a8px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: var(--white);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: var(--secondary);
+        }
+        
+        tr:hover {
+            background-color: rgba(44, 110, 213, 0.05);
+        }
+        
+        td {
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .platform-amazon {
+            display: flex;
+            align-items: center;
+        }
+        
+        .platform-amazon::before {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: var(--amazon);
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        
+        .platform-flipkart {
+            display: flex;
+            align-items: center;
+        }
+        
+        .platform-flipkart::before {
+            content: "";
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: var(--flipkart);
+            margin-right: 10px;
+            border-radius: 3px;
+        }
+        
+        .price {
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .rating {
+            display: flex;
+            align-items: center;
+        }
+        
+        .stars {
+            color: gold;
+            margin-left: 5px;
+        }
+        
+        .link-btn {
+            padding: 8px 12px;
+            background-color: var(--primary-light);
+            color: var(--white);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 4px;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+        
+        .link-btn:hover {
+            background-color: var(--primary);
+        }
+        
+        .copy-btn {
+            background: none;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        .summary {
+            background-color: var(--secondary);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .summary-item {
+            flex-basis: 48%;
+            padding: 15px;
+            background: var(--white);
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin-bottom: 15px;
+        }
+        
+        .summary-label {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--success);
+        }
+        
+        .buyhatke-section {
+            margin: 30px 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .buyhatke-header {
+            background-color: var(--primary-light);
+            color: var(--white);
+            padding: 15px;
+        }
+        
+        iframe {
+            border: none;
+            width: 100%;
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .back-link:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Link copied to clipboard!');
+            }, function(err) {
+                alert('Failed to copy: ', err);
+            });
+        }
+        
+        function showCopiedTooltip(btnId) {
+            const btn = document.getElementById(btnId);
+            const originalText = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 2000);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>Comparison Result for <span class="product-name">{{ product_name }}</span></h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Platform</th>
+                    <th>Price</th>
+                    <th>Rating</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><div class="platform-amazon">Amazon</div></td>
+                    <td class="price">{{ amazon_price }}</td>
+                    <td>
+                        <div class="rating">
+                            {{ amazon_rating }}
+                            <div class="stars"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ amazon_url }}" target="_blank" class="link-btn">View on Amazon</a>
+                        <button id="amazon-copy-btn" class="copy-btn" onclick="copyToClipboard('{{ amazon_url }}'); showCopiedTooltip('amazon-copy-btn');">📋 Copy Link</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td><div class="platform-flipkart">Flipkart</div></td>
+                    <td class="price">{{ flipkart_price }}</td>
+                    <td>
+                        <div class="rating">
+                            {{ flipkart_rating }}
+                            <div class="stars"></div>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{{ flipkart_url }}" target="_blank" class="link-btn">View on Flipkart</a>
+                        <button id="flipkart-copy-btn" class="copy-btn" onclick="copyToClipboard('{{ flipkart_url }}'); showCopiedTooltip('flipkart-copy-btn');">📋 Copy Link</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="summary">
+            <div class="summary-item">
+                <div class="summary-label">Best Price</div>
+                <div class="summary-value">{{ better_price }}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Better Rating</div>
+                <div class="summary-value">{{ better_rating }}</div>
+            </div>
+        </div>
+
+        {% if buyhatke_search_url %}
+        <div class="buyhatke-section">
+            <div class="buyhatke-header">
+                <h3>BuyHatke Comprehensive Comparison</h3>
+            </div>
+            <iframe src="{{ buyhatke_search_url }}" height="600" frameborder="0"></iframe>
+        </div>
+        {% endif %}
+
+        <a href="/" class="back-link">← Back to Home</a>
+    </div>
+</body>
+</html>
