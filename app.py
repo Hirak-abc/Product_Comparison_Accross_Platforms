@@ -1,42 +1,110 @@
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from flask import Flask, request as flask_request, render_template
+import pandas as pd
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
-# Replace with your Amazon Product Advertising API credentials
-AWS_ACCESS_KEY = 'YOUR_AWS_ACCESS_KEY'
-AWS_SECRET_KEY = 'YOUR_AWS_SECRET_KEY'
-ASSOCIATE_TAG = 'YOUR_ASSOCIATE_TAG'
+# Flask App
+app = Flask(__name__)
 
-def get_amazon_product_info(product_name):
+# Category mapping to Excel files
+CATEGORIES = {
+    "headphones": r"E:\DHP\Group_Project\Final_Fold_Group\Cleaned_H.xlsx",
+    "phones": r"E:\DHP\Group_Project\Final_Fold_Group\Cleaned_P.xlsx",
+    "laptops": r"E:\DHP\Group_Project\Final_Fold_Group\Cleaned_L.xlsx",
+    "books": r"E:\DHP\Group_Project\Final_Fold_Group\Cleaned_B.xlsx"
+}
+
+BUYHATKE_URL = "https://buyhatke.com/"
+
+def parse_price(price):
     try:
-        client = boto3.client(
-            'product-advertising',
-            aws_access_key_id=AWS_ACCESS_KEY,
-            aws_secret_access_key=AWS_SECRET_KEY,
-            region_name='us-east-1'
-        )
+        return float(str(price).replace(",", "").strip())
+    except:
+        return float('inf')
 
-        response = client.search_items(
-            Keywords=product_name,
-            Resources=['ItemInfo.Title', 'ItemInfo.CustomerReviews'],
-            PartnerTag=ASSOCIATE_TAG,
-            PartnerType='Associates',
-            Marketplace='www.amazon.com'
-        )
+def parse_rating(rating):
+    try:
+        return float(str(rating).strip())
+    except:
+        return 0.0
 
-        items = response.get('ItemsResult', {}).get('Items', [])
-        if not items:
-            return 'No products found.'
+@app.route("/", methods=["GET"])
+def homepage():
+    return render_template("index.html", categories=CATEGORIES)
 
-        product = items[0]
-        title = product.get('ItemInfo', {}).get('Title', {}).get('DisplayValue', 'N/A')
-        rating = product.get('ItemInfo', {}).get('CustomerReviews', {}).get('AverageRating', 'N/A')
-        total_reviews = product.get('ItemInfo', {}).get('CustomerReviews', {}).get('TotalReviews', 'N/A')
+@app.route("/select-product", methods=["GET"])
+def select_product():
+    category = flask_request.args.get("category", "").lower()
 
-        return f"Title: {title}\nRating: {rating}\nTotal Reviews: {total_reviews}"
+    if category not in CATEGORIES:
+        return render_template("error.html", message="Invalid category selected.", back_url="/")
 
-    except (BotoCoreError, ClientError) as error:
-        return f"An error occurred: {error}"
+    try:
+        df = pd.read_excel(CATEGORIES[category])
+    except Exception as e:
+        return render_template("error.html", message=f"Failed to load data for {category}. Error: {str(e)}", back_url="/")
 
-# Example usage
-product_name = 'iPhone 13'
-print(get_amazon_product_info(product_name))
+    products = df["Name"].dropna().tolist()
+    return render_template("select_product.html", category=category, products=products)
+
+@app.route("/compare", methods=["GET"])
+def compare_product():
+    category = flask_request.args.get("category", "").lower()
+    product_name = flask_request.args.get("product", "")
+    include_buyhatke = flask_request.args.get("include_buyhatke", "") == "yes"
+
+    if category not in CATEGORIES:
+        return render_template("error.html", message="Invalid category selected.", back_url="/")
+
+    try:
+        df = pd.read_excel(CATEGORIES[category])
+    except Exception as e:
+        return render_template("error.html", message=f"Failed to load data for {category}. Error: {str(e)}", back_url="/")
+
+    if product_name not in df["Name"].values:
+        return render_template("error.html", message=f"Product '{product_name}' not found.", back_url=f"/select-product?category={category}")
+
+    product = df[df["Name"] == product_name].iloc[0]
+
+    amazon_price = parse_price(product.get("Price in Amazon"))
+    flipkart_price = parse_price(product.get("Price in Flipkart"))
+    amazon_rating = parse_rating(product.get("Rating in Amazon"))
+    flipkart_rating = parse_rating(product.get("Rating in Flipkart"))
+    amazon_url = product.get("URL in Amazon", "")
+    flipkart_url = product.get("URL in Flipkart", "")
+
+    better_price = (
+        "Amazon" if amazon_price < flipkart_price else
+        "Flipkart" if flipkart_price < amazon_price else
+        "Both (Same Price)"
+    )
+    better_rating = (
+        "Amazon" if amazon_rating > flipkart_rating else
+        "Flipkart" if flipkart_rating > amazon_rating else
+        "Both (Same Rating)"
+    )
+
+    buyhatke_search_url = ""
+    if include_buyhatke:
+        product_url = amazon_url or flipkart_url
+        if product_url:
+            encoded_url = product_url.replace("&", "%26")
+            buyhatke_search_url = f"{BUYHATKE_URL}?q={encoded_url}"
+
+    return render_template("compare.html",
+                           product_name=product_name,
+                           amazon_price=amazon_price,
+                           flipkart_price=flipkart_price,
+                           amazon_rating=amazon_rating,
+                           flipkart_rating=flipkart_rating,
+                           better_price=better_price,
+                           better_rating=better_rating,
+                           amazon_url=amazon_url,
+                           flipkart_url=flipkart_url,
+                           buyhatke_search_url=buyhatke_search_url)
+
+if __name__ == "__main__":
+    app.run(debug=True)
